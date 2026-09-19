@@ -273,6 +273,148 @@
       width: 8px; height: 8px; border-radius: 50%;
       background: #10b981; box-shadow: 0 0 10px #10b981;
     }
+
+    /* ====================================================
+       MOBILE & TABLET RESPONSIVENESS (iOS & Android Friendly)
+       ==================================================== */
+    @media (max-width: 768px) {
+      /* Top Navbar - Clean, Compact & Horizontally Scrollable */
+      .top-nav {
+        top: 10px; left: 12px; right: 12px;
+        flex-direction: column;
+        gap: 8px;
+        align-items: stretch;
+      }
+      .brand {
+        padding: 6px 14px;
+        justify-content: space-between;
+      }
+      .brand-name { font-size: 0.88rem; }
+      .brand-tag { font-size: 0.7rem; }
+
+      .zone-tabs {
+        overflow-x: auto;
+        white-space: nowrap;
+        padding: 4px;
+        gap: 4px;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none; /* Hide scrollbar Firefox */
+      }
+      .zone-tabs::-webkit-scrollbar { display: none; } /* Hide scrollbar Chrome/Safari */
+      
+      .zone-tab {
+        padding: 6px 12px;
+        font-size: 0.75rem;
+        flex-shrink: 0;
+      }
+
+      /* Mobile Friendly Info Card */
+      #info-card {
+        bottom: 16px;
+        padding: 18px 20px;
+        max-width: calc(100% - 24px);
+        width: calc(100% - 24px);
+        border-radius: 20px;
+        max-height: 48vh;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      #card-title {
+        font-size: 1.15rem;
+        margin-bottom: 6px;
+      }
+      #card-desc {
+        font-size: 0.82rem;
+        line-height: 1.5;
+        margin-bottom: 10px;
+      }
+      #card-tags {
+        gap: 4px;
+        margin-bottom: 12px;
+      }
+      .skill-pill {
+        font-size: 0.7rem;
+        padding: 3px 9px;
+      }
+      .card-actions {
+        gap: 8px;
+      }
+      .btn-action {
+        padding: 7px 14px;
+        font-size: 0.76rem;
+      }
+
+      /* Projects Modal on Mobile */
+      #projects-overlay {
+        padding: 20px 12px 30px;
+        justify-content: flex-start;
+      }
+      .modal-head { margin-bottom: 16px; }
+      .modal-head h2 { font-size: 1.4rem; }
+      .modal-head p { font-size: 0.8rem; }
+      
+      .proj-grid {
+        grid-template-columns: 1fr;
+        gap: 14px;
+      }
+      .proj-card {
+        padding: 16px;
+        border-radius: 16px;
+      }
+      .proj-icon-box {
+        width: 38px; height: 38px;
+        font-size: 1.2rem;
+      }
+      .proj-card h3 { font-size: 0.98rem; }
+      .proj-role { font-size: 0.7rem; }
+      .proj-bullets li {
+        font-size: 0.76rem;
+        line-height: 1.45;
+      }
+      .stack-badge {
+        font-size: 0.68rem;
+        padding: 2px 8px;
+      }
+      .card-link {
+        font-size: 0.75rem;
+        padding: 7px 10px;
+      }
+      #close-modal {
+        margin-top: 18px;
+        padding: 9px 28px;
+        font-size: 0.82rem;
+      }
+
+      /* Hide floating guide on small screens to prevent covering screen */
+      .walk-guide {
+        display: none;
+      }
+
+      #loading h1 {
+        font-size: 2.1rem;
+      }
+      #loading p {
+        font-size: 0.85rem;
+      }
+      .load-bar {
+        width: 220px;
+      }
+    }
+
+    /* Small phone screens (iPhone SE, Galaxy A-series, small Androids) */
+    @media (max-width: 420px) {
+      .top-nav { top: 6px; left: 8px; right: 8px; }
+      #info-card {
+        bottom: 12px;
+        padding: 15px 16px;
+        max-width: calc(100% - 16px);
+        width: calc(100% - 16px);
+      }
+      #card-title { font-size: 1.05rem; }
+      #card-desc { font-size: 0.78rem; }
+      .card-badge { font-size: 0.68rem; padding: 2px 8px; }
+      .zone-step { font-size: 0.68rem; }
+    }
   </style>
 </head>
 <body>
@@ -905,8 +1047,25 @@ window.addEventListener('keydown', (e) => {
 showCard(zones[0], 0);
 scheduleNext();
 
-// Camera setup
-const camOffset = new THREE.Vector3(0, 9, 14);
+// Camera setup - dynamically adapted for mobile vs desktop
+const isMobile = () => window.innerWidth <= 768;
+const camOffset = new THREE.Vector3();
+
+function updateCameraSettings() {
+  if (isMobile()) {
+    // Lift camera higher and pull back so the character and island are centered above the bottom card
+    camOffset.set(0, 12, 19);
+    camera.fov = 62;
+  } else {
+    camOffset.set(0, 9, 14);
+    camera.fov = 54;
+  }
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+}
+updateCameraSettings();
+
 const camTarget = new THREE.Vector3();
 
 // Animation Loop
@@ -954,7 +1113,9 @@ function animate() {
 
   // Camera smooth chase
   camera.position.lerp(priyanshi.position.clone().add(camOffset), 0.035);
-  camTarget.lerp(priyanshi.position.clone().add(new THREE.Vector3(0,1.1,0)), 0.05);
+  // Focus slightly higher on mobile so character stays visible above the bottom card
+  const lookHeight = isMobile() ? 1.8 : 1.1;
+  camTarget.lerp(priyanshi.position.clone().add(new THREE.Vector3(0, lookHeight, 0)), 0.05);
   camera.lookAt(camTarget);
 
   renderer.render(scene, camera);
@@ -976,10 +1137,8 @@ const ldi = setInterval(() => {
   }
 }, 110);
 
-window.addEventListener('resize', ()=>{
-  camera.aspect = innerWidth/innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(innerWidth, innerHeight);
+window.addEventListener('resize', () => {
+  updateCameraSettings();
 });
 
 animate();
